@@ -42,9 +42,9 @@
 ---@field node_box table|nil
 ---@field selection_box table|nil
 ---@field collision_box table|nil
----@field on_place fun(itemstack:any, placer:any, pointed_thing:any):any|nil
----@field on_construct fun(pos:Vector3):any|nil
----@field on_destruct fun(pos:Vector3):any|nil
+---@field on_place? fun(itemstack:any, placer:any, pointed_thing:any):any|nil
+---@field on_construct? fun(pos:Vector3):any|nil
+---@field on_destruct? fun(pos:Vector3):any|nil
 
 ---@class DefaultLib
 ---@field player_attached table<string, boolean>|nil

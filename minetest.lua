@@ -877,7 +877,7 @@ minetest = {
 
     ---@param pos Vector3
     ---@param name string
-    ---@param staticdata table<string, any> --TODO: check this
+    ---@param staticdata? table<string, any> --TODO: check this
     --- Spawn Lua-defined entity at position.
     ---@return ObjectRef|nil # `nil` if failed
     add_entity = function(pos, name, staticdata) end,
@@ -1265,6 +1265,8 @@ minetest = {
 
 
 }
+
+core = minetest
 
 ----------------------------
 --#region Response tables --
