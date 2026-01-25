@@ -3,6 +3,7 @@
 --- It is intended to be used with VS Code's Lua language server as a library.
 --- Nothing in here is implemented.
 
+---@alias ColorString string  -- typically "#RRGGBB" / "#RRGGBBAA" depending on API usage
 
 -- dump(value, name) -> string
 ---@param value any

@@ -38,13 +38,6 @@
 ---|"mapgen_mossycobble"
 ---|"mapgen_stair_desert_stone"
 
----@class Vector3 An XYZ coordinate.
----@field x number
----@field y number The vertical position.
----@field z number
----@field minp Vector3 Custom field for minimum values
----@field maxp Vector3 Custom field for maximum values
-
 --- The Minetest namespace for **5.5.1**, based entirely on lua_api.txt, with formatting changes.
 minetest = {
     ---@return string modname The currently loading mod's name.
@@ -195,7 +188,7 @@ minetest = {
     --- Converts a ColorSpec to a ColorString.
     --- If the ColorSpec is invalid, returns `nil`.
     ---@todo type later
-    ---@return string colorstring [ColorString](https://...)
+    ---@return ColorString colorstring [ColorString](https://...)
     colorspec_to_colorstring = function(colorspec) end,
 
     --- Converts a ColorSpec to a rawstring of four bytes in an RGBA layout,
@@ -1438,13 +1431,12 @@ local ItemDefinition = {
         -- Definition of item sounds to be played at various events.
         -- All fields in this table are optional.
 
-        ---@alias SimpleSoundSpec unknown
         ---@type SimpleSoundSpec
-        breaks = {},
+        breaks = {name = ""},
         -- When tool breaks due to wear. Ignored for non-tools
 
         ---@type SimpleSoundSpec
-        eat = {},
+        eat = {name = ""},
         -- When item is eaten with `minetest.do_item_eat`
     },
 
@@ -1701,7 +1693,7 @@ local NodeDefinition = {
         -- If walkable, played when object walks on it. If node is
         -- climbable or a liquid, played when object moves through it
         ---@type SimpleSoundSpec
-        footstep = {},
+        footstep = {name = ""},
 
         -- While digging node.
         -- If `"__group"`, then the sound will be
@@ -1711,26 +1703,26 @@ local NodeDefinition = {
         -- cannot predict which one)
         -- Default value: `"__group"`
         ---@type SimpleSoundSpec|"__group"
-        dig = {},
+        dig = {name = ""},
 
         -- Node was dug
         ---@type SimpleSoundSpec
-        dug = {},
+        dug = {name = ""},
 
         -- Node was placed. Also played after falling
         ---@type SimpleSoundSpec
-        place = {},
+        place = {name = ""},
 
         -- When node placement failed.
         -- Note: This happens if the _built-in_ node placement failed.
         -- This sound will still be played if the node is placed in the
         -- `on_place` callback manually.
         ---@type SimpleSoundSpec
-        place_failed = {},
+        place_failed = {name = ""},
 
         -- When node starts to fall or is detached
         ---@type SimpleSoundSpec
-        fall = {},
+        fall = {name = ""},
     },
 
 
