@@ -42,6 +42,8 @@
 ---@field x number
 ---@field y number The vertical position.
 ---@field z number
+---@field minp Vector3 Custom field for minimum values
+---@field maxp Vector3 Custom field for maximum values
 
 --- The Minetest namespace for **5.5.1**, based entirely on lua_api.txt, with formatting changes.
 minetest = {
@@ -969,7 +971,8 @@ minetest = {
     get_voxel_manip = function(pos1, pos2) end,
 
     ---@param flags unknown
-    ---@param deco_ids string[] List of IDs of decorations which notification is requested for.
+    ---@param deco_ids? string[] List of IDs of decorations which notification is requested for.
+    ---@param custom_ids? string[]
     --- Set the types of on-generate notifications that should be collected.
     --- * `flags` is a flag field with the available flags:
     ---   * dungeon
@@ -979,7 +982,7 @@ minetest = {
     ---   * large_cave_begin
     ---   * large_cave_end
     ---   * decoration
-    set_gen_notify = function(flags, deco_ids) end,
+    set_gen_notify = function(flags, deco_ids, custom_ids) end,
 
     ---@return string, string[]
     get_gen_notify = function() end,
