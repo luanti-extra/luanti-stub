@@ -4,7 +4,9 @@
 -- commonly-used exported helpers (especially node sounds) + leaves room for extra fields.
 
 
----@class SimpleSoundSpec
+---@class SoundSpec
+
+---@class SimpleSoundSpec: SoundSpec
 ---@field name string
 ---@field gain number|nil
 ---@field pitch number|nil
@@ -12,7 +14,8 @@
 
 ---@alias DefaultSoundSpec SimpleSoundSpec|string
 
----@class DefaultNodeSounds
+
+---@class DefaultNodeSounds: SoundSpec
 ---@field footstep DefaultSoundSpec|nil
 ---@field dig DefaultSoundSpec|nil
 ---@field dug DefaultSoundSpec|nil
@@ -54,7 +57,7 @@
 ---@field gui_hotbar_bg string|nil
 ---@field gui_survival_form string|nil
 local DefaultLib = {
-    LIGHT_MAX = 0, -- e.g. 10
+    LIGHT_MAX = 13, -- e.g. 10
 }
 
 -- Base helper: merge defaults + overrides (commonly used pattern)
