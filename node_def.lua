@@ -39,8 +39,6 @@ local NodeDefinition = {
     -- The node's original color will be multiplied with this color.
     -- If the node has a palette, then this setting only has an effect in
     -- the inventory and on the wield item.
-    ---@alias ColorSpec unknown
-    ---@type ColorSpec
     color = {},
 
     -- Specifies how the texture's alpha channel will be used for rendering.

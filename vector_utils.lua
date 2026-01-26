@@ -11,6 +11,12 @@
 ---@field minp? Vector3 Custom field for minimum values
 ---@field maxp? Vector3 Custom field for maximum values
 
+
+---@class Vector2
+---@field x number
+---@field y number
+
+
 ---@class VectorLib
 local VectorLib = {}
 
@@ -62,6 +68,11 @@ function VectorLib.round(v) end
 ---@param b Vector3
 ---@return Vector3
 function VectorLib.cross(a, b) end
+
+---@param a Vector3
+---@param b Vector3
+---@return Vector3
+function VectorLib.direction(a, b) end
 
 ---@type VectorLib
 vector = VectorLib

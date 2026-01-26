@@ -78,6 +78,11 @@
 -- This represents the Lua “self” used by mobs_redo callbacks (on_die, custom_attack, etc.).
 -- The real runtime object has many more fields; keeping it loose avoids wrong assumptions.
 ---@field object? ObjectRef
+---@field driver ObjectRef The driver of this mob
+---@field player_rotation Vector3
+---@field driver_attach_at Vector3
+---@field driver_eye_offset Vector3
+---@field driver_scale Vector3
 
 ---@alias OnDie fun(self:MobEntity, pos:Vector3):nil
 ---@alias CustomAttack fun(self:MobEntity, to_attack:ObjectRef):nil
@@ -86,7 +91,7 @@
 ---@alias OnSpawn fun(self:MobEntity, pos:Vector3):nil
 
 ---@class MobDef
--- “Definition table” for mobs:register_mob(name, def). ([antummt.github.io](https://antummt.github.io/mod-mobs_redo/api.html))
+-- “Definition table” for MobsRedo:register_mob(name, def). ([antummt.github.io](https://antummt.github.io/mod-mobs_redo/api.html))
 -- Core
 ---@field type MobType
 ---@field hp_min integer
@@ -101,7 +106,7 @@
 -- Textures/mesh/blood
 ---@field textures? string[][]|string[]|table
 ---@field gotten_texture? string
----@field child_texture? string
+---@field child_texture? string|string[][]
 ---@field mesh? string
 ---@field gotten_mesh? string
 ---@field blood_amount? integer
@@ -164,7 +169,7 @@
 ---@field reach? integer
 -- Eating / node replace
 ---@field on_replace? OnReplace
----@field replace_what? ReplaceWhatEntry[]
+---@field replace_what? string[]|ReplaceWhatEntry[]
 ---@field replace_with? NodeName
 ---@field replace_rate? integer
 ---@field replace_offset? number
@@ -194,7 +199,7 @@
 ---@field on_spawn? fun(self:MobEntity, pos:Vector3):nil
 
 ---@class ArrowDef
--- Definition table for mobs:register_arrow(name, def). ([antummt.github.io](https://antummt.github.io/mod-mobs_redo/api.html))
+-- Definition table for MobsRedo:register_arrow(name, def). ([antummt.github.io](https://antummt.github.io/mod-mobs_redo/api.html))
 ---@field visual? string
 ---@field visual_size? {x:number, y:number}
 ---@field textures? string[]|string[][]
@@ -207,14 +212,14 @@
 
 ---@class MobsRedoAPI
 -- Global `mobs` table (injected by the mobs_redo mod).
----@field mod? string -- Many mods check `mobs.mod == "redo"` when multiple mob APIs exist.
-mobs = {}
+---@field mod? string -- Many mods check `MobsRedo.mod == "redo"` when multiple mob APIs exist.
+MobsRedo = {}
 
 -- Register a mob entity.
 ---@param name EntityName
 ---@param def MobDef
 ---@return nil
-function mobs:register_mob(name, def) end
+function MobsRedo:register_mob(name, def) end
 
 -- Register a “classic” spawn (wrapper around spawn_specific in docs).
 ---@param name EntityName
@@ -226,7 +231,7 @@ function mobs:register_mob(name, def) end
 ---@param max_height integer
 ---@param day_toggle boolean|nil
 ---@return nil
-function mobs:register_spawn(name, nodes, max_light, min_light, chance, active_object_count, max_height, day_toggle) end
+function MobsRedo:register_spawn(name, nodes, max_light, min_light, chance, active_object_count, max_height, day_toggle) end
 
 -- Register a detailed spawn definition (ABM-style).
 ---@param name EntityName
@@ -242,18 +247,18 @@ function mobs:register_spawn(name, nodes, max_light, min_light, chance, active_o
 ---@param day_toggle boolean|nil
 ---@param on_spawn fun(self:MobEntity, pos:Vector3):nil
 ---@return nil
-function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light, interval, chance, active_object_count, min_height, max_height, day_toggle, on_spawn) end
+function MobsRedo:spawn_specific(name, nodes, neighbors, min_light, max_light, interval, chance, active_object_count, min_height, max_height, day_toggle, on_spawn) end
 
 -- Table-form spawner registration (fields map to spawn_specific params).
 ---@param def SpawnDef
 ---@return nil
-function mobs:spawn(def) end
+function MobsRedo:spawn(def) end
 
 -- Register an arrow entity used by ranged mobs.
 ---@param name EntityName
 ---@param def ArrowDef
 ---@return nil
-function mobs:register_arrow(name, def) end
+function MobsRedo:register_arrow(name, def) end
 
 -- Register a spawn egg item for a mob.
 ---@param name EntityName
@@ -262,20 +267,20 @@ function mobs:register_arrow(name, def) end
 ---@param addegg integer
 ---@param no_creative boolean|nil
 ---@return nil
-function mobs:register_egg(name, description, background, addegg, no_creative) end
+function MobsRedo:register_egg(name, description, background, addegg, no_creative) end
 
 -- Explosion helpers.
 ---@param self MobEntity
 ---@param pos Vector3
 ---@param radius integer
 ---@return nil
-function mobs:boom(self, pos, radius) end
+function MobsRedo:boom(self, pos, radius) end
 
----@deprecated Use mobs:boom
+---@deprecated Use MobsRedo:boom
 ---@param pos Vector3
 ---@param radius integer
 ---@return nil
-function mobs:explosion(pos, radius) end
+function MobsRedo:explosion(pos, radius) end
 
 -- Capture / tame helpers (typically called inside on_rightclick).
 ---@param self MobEntity
@@ -286,7 +291,7 @@ function mobs:explosion(pos, radius) end
 ---@param force_take boolean|nil
 ---@param replacewith ItemString|nil
 ---@return nil
-function mobs:capture_mob(self, clicker, chance_hand, chance_net, chance_lasso, force_take, replacewith) end
+function MobsRedo:capture_mob(self, clicker, chance_hand, chance_net, chance_lasso, force_take, replacewith) end
 
 ---@param self MobEntity
 ---@param clicker ObjectRef
@@ -294,31 +299,30 @@ function mobs:capture_mob(self, clicker, chance_hand, chance_net, chance_lasso, 
 ---@param breed boolean
 ---@param tame boolean
 ---@return boolean accepted
-function mobs:feed_tame(self, clicker, feed_count, breed, tame) end
+function MobsRedo:feed_tame(self, clicker, feed_count, breed, tame) end
 
 ---@param self MobEntity
 ---@param clicker ObjectRef
 ---@return boolean protected
-function mobs:protect(self, clicker) end
+function MobsRedo:protect(self, clicker) end
 
 -- Riding helpers.
----@param self MobEntity
+---@param entity MobEntity
 ---@param player ObjectRef
 ---@return nil
-function mobs:attach(self, player) end
+function MobsRedo.attach(entity, player) end
 
----@param player ObjectRef
----@param offset Vector3|table|nil
+---@param player ObjectRef The player to detach from the mob
 ---@return nil
-function mobs:detach(player, offset) end
+function MobsRedo.detach(player) end
 
----@param self MobEntity
----@param move_animation string
----@param stand_animation string
----@param can_fly boolean
----@param dtime number
+---@param entity MobEntity The mob entity to fly
+---@param moving_anim string The moving animation
+---@param stand_anim string The standing animation
+---@param can_fly boolean Can it fly
+---@param dtime number The time
 ---@return nil
-function mobs:drive(self, move_animation, stand_animation, can_fly, dtime) end
+function MobsRedo.drive(entity, moving_anim, stand_anim, can_fly, dtime) end
 
 ---@param self MobEntity
 ---@param dtime number
@@ -328,30 +332,45 @@ function mobs:drive(self, move_animation, stand_animation, can_fly, dtime) end
 ---@param move_animation string
 ---@param stand_animation string
 ---@return nil
-function mobs:fly(self, dtime, speed, can_shoot, arrow_entity, move_animation, stand_animation) end
+function MobsRedo:fly(self, dtime, speed, can_shoot, arrow_entity, move_animation, stand_animation) end
 
 ---@param self MobEntity
 ---@param name string
 ---@return nil
-function mobs:set_animation(self, name) end
+function MobsRedo:set_animation(self, name) end
 
 -- Extra API functions mentioned in some changelogs/mirrors (signatures not fully specified in the 2017 HTML docs):
 ---@param self MobEntity
 ---@param player ObjectRef
 ---@return nil
-function mobs:force_capture(self, player) end -- ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
+function MobsRedo:force_capture(self, player) end -- ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
 
 ---@param self MobEntity
 ---@param velocity number|Vector3
 ---@return nil
-function mobs:set_velocity(self, velocity) end -- ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
+function MobsRedo:set_velocity(self, velocity) end -- ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
 
 ---@param pos1 Vector3
 ---@param pos2 Vector3
 ---@return boolean
-function mobs:line_of_sight(pos1, pos2) end -- ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
+function MobsRedo:line_of_sight(pos1, pos2) end -- ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
 
--- ContentDB release notes mention a new mobs:scale_mob() exists (params not documented there).
+-- ContentDB release notes mention a new MobsRedo:scale_mob() exists (params not documented there).
 ---@return nil
-function mobs:scale_mob(...) end -- ([content.luanti.org](https://content.luanti.org/packages/TenPlus1/mobs/))
+function MobsRedo:scale_mob(...) end -- ([content.luanti.org](https://content.luanti.org/packages/TenPlus1/mobs/))
+
+
+---Particle helper used by many mobs_redo-based MobsRedo.
+---Matches calls like: MobsRedo:effect(pos, 30, "nether_particle.png", 0.1, 2, 3, 5)
+---@param pos Vector3 The position of the effect
+---@param amount integer The amount of the effect
+---@param texture string The texture used for the effect
+---@param min_size? number The minimum size for the effect
+---@param max_size? number The maximum size for the effect
+---@param radius? number The radius of the effect
+---@param gravity? number The gravity applied to it
+function MobsRedo:effect(pos, amount, texture, min_size, max_size, radius, gravity) end
+
+
+mobs = MobsRedo
 

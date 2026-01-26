@@ -4,13 +4,9 @@
 --- Nothing in here is implemented.
 
 
----@class ObjectRef
-
 ---@class InvRef
 
 ---@class VoxelManip
-
----@class ItemStack
 
 ---@class NodeSpec
 ---@field name string
@@ -18,11 +14,20 @@
 ---@field param2? integer
 ---@field [string] any
 
+
 ---@class NodeMetaRef
 local NodeMetaRef = {}
 
 
 ---@alias NoiseParams unknown NoiseParams has not yet been defined in this file
+
+
+---@alias ColorSpec string|{r:integer, g:integer, b:integer, a:integer}|{a:integer, r:integer, g:integer, b:integer}
+
+-- Basic “itemstring”/“nodename” aliases (Minetest usually uses plain strings for these).
+---@alias ItemString string
+
+
 
 ---@alias Raycast unknown Raycast has not yet been defined in this file
 ---@alias LSystemTreeDefinition table LSystemTreeDefinition has not yet been defined in this file
@@ -57,6 +62,9 @@ local NodeMetaRef = {}
 
 --- The Minetest namespace for **5.5.1**, based entirely on lua_api.txt, with formatting changes.
 minetest = {
+    ---@type table<string, EntityDefinition>
+    registered_entities = {},
+
     ---@return string modname The currently loading mod's name.
     ---returns the currently loading mod's name, when loading a mod.
     get_current_modname = function() end,
@@ -463,7 +471,6 @@ minetest = {
     --- * `clicker`: ObjectRef - Object that acted upon `player`, may or may not be a player
     register_on_rightclickplayer = function(handler) end,
 
-    ---@alias PlayerHPChangeReason {type: "set_hp"|"punch"|"fall"|"node_damage"|"drown"|"respawn", from: "mod"|"engine", object: ObjectRef?, node: string?}
     ---@param handler fun(player, hp_change, reason): number?
     ---@param modifier boolean when true, the function should return the actual `hp_change`.
     --- * Called when the player gets damaged or healed
@@ -670,7 +677,7 @@ minetest = {
     -- Setting-related --
     ---------------------
 
-    ---@type table<string, any>
+    ---@type MTSettings
     --- Settings object containing all of the settings from the
     --- main config file (`minetest.conf`).
     settings = {},
@@ -1299,6 +1306,11 @@ function minetest.add_node(pos, node) end
 ---@return NodeSpec
 function minetest.get_node(pos) end
 
+
+---@param name string
+---@param entitydef EntityDefinition
+---@return nil
+function minetest.register_entity(name, entitydef) end
 
 
 core = minetest
