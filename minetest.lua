@@ -4,9 +4,26 @@
 --- Nothing in here is implemented.
 
 
----@alias ObjectRef unknown ObjectRef has not yet been defined in this file
+---@class ObjectRef
+
+---@class InvRef
+
+---@class VoxelManip
+
+---@class ItemStack
+
+---@class NodeSpec
+---@field name string
+---@field param1? integer
+---@field param2? integer
+---@field [string] any
+
+---@class NodeMetaRef
+local NodeMetaRef = {}
+
+
 ---@alias NoiseParams unknown NoiseParams has not yet been defined in this file
----@class VoxelManip VoxelManip has not yet been defined in this file
+
 ---@alias Raycast unknown Raycast has not yet been defined in this file
 ---@alias LSystemTreeDefinition table LSystemTreeDefinition has not yet been defined in this file
 
@@ -640,7 +657,6 @@ minetest = {
     --- * If message comes from a server mod, `sender` field is an empty string.
     register_on_modchannel_message = function(handler) end,
 
-    ---@alias ItemStack unknown TODO: document ItemStack
     ---@param handler fun(pos_list: Vector3[], node_list: ItemStack[])
     --- Called after liquid nodes (`liquidtype ~= "none"`) are modified by the
     ---   engine's liquid transformation process.
@@ -768,19 +784,12 @@ minetest = {
     ------------------------
     -- Environment access --
     ------------------------
-    ---@alias NodeWithMetadata {name: string, param1: number?, param2: number?, [string]: any}
-    ---@param pos Vector3
-    ---@param node NodeWithMetadata
-    --- Set node at position `pos`
-    --- * If param1 or param2 is omitted, it's set to `0`.
-    --- ```
-    --- minetest.set_node({x=0, y=10, z=0}, {name="default:wood"})`
-    --- ```
-    set_node = function(pos, node) end,
-    add_node = minetest.set_node, -- alias to `minetest.set_node`
+
+    ---@type EnvRef
+    env = EnvRef,
 
     ---@param pos Vector3[]
-    ---@param node NodeWithMetadata
+    ---@param node NodeSpec
     --- Set node on all positions set in the first argument.
     --- * For node specification or position syntax see `minetest.set_node` call
     --- * Faster than set_node due to single call, but still considerably slower
@@ -795,20 +804,13 @@ minetest = {
     bulk_set_node = function(pos, node) end,
 
     ---@param pos Vector3
-    ---@param node NodeWithMetadata
+    ---@param node NodeSpec
     --- Set node at position, but don't remove metadata
     swap_node = function(pos, node) end,
 
     ---@param pos Vector3
     --- By default it does the same as `minetest.set_node(pos, {name="air"})`
     remove_node = function(pos) end,
-
-    ---@param pos Vector3
-    --- Returns the node at the given position as table in the format
-    --- `{name="node_name", param1=0, param2=0}`,
-    --- returns `{name="ignore", param1=0, param2=0}` for unloaded areas.
-    ---@return NodeWithMetadata
-    get_node = function(pos) end,
 
     ---@param pos Vector3
     --- Same as `get_node` but returns `nil` for unloaded areas.
@@ -841,7 +843,7 @@ minetest = {
     get_artificial_light = function(param1) end,
 
     ---@param pos Vector3
-    ---@param node NodeWithMetadata --TODO: does this need to be a string?
+    ---@param node NodeSpec --TODO: does this need to be a string?
     --- Place node with the same effects that a player would cause
     place_node = function(pos, node) end,
 
@@ -862,7 +864,7 @@ minetest = {
     ---@param pos1 Vector3
     ---@param pos2 Vector3
     --- Get a table of positions of nodes that have metadata within a region {pos1, pos2}.
-    ---@return table<Vector3, NodeWithMetadata> --TODO: does this actually return a table, or just an array?
+    ---@return table<Vector3, NodeSpec> --TODO: does this actually return a table, or just an array?
     find_nodes_with_meta = function(pos1, pos2) end,
 
     ---@param pos Vector3
@@ -1265,6 +1267,38 @@ minetest = {
 ---@param pos Vector3
 ---@return NodeTimerRef
 function minetest.get_node_timer(pos) end
+
+---@param itemname string
+---@param groupname string
+---@return integer rating  -- 0 means "not in group"
+function minetest.get_item_group(itemname, groupname) end
+
+---@param pos Vector3
+---@param player_name string
+---@return boolean
+function minetest.is_protected(pos, player_name) end
+
+--- Set node at position `pos`
+--- * If param1 or param2 is omitted, it's set to `0`.
+--- ```
+--- minetest.set_node({x=0, y=10, z=0}, {name="default:wood"})`
+--- ```
+---@param pos Vector3
+---@param node NodeSpec
+function minetest.set_node(pos, node) end
+
+--- alias to `minetest.set_node`
+---@param pos Vector3
+---@param node NodeSpec
+function minetest.add_node(pos, node) end
+
+--- Returns the node at the given position as table in the format
+--- `{name="node_name", param1=0, param2=0}`,
+--- returns `{name="ignore", param1=0, param2=0}` for unloaded areas.
+---@param pos Vector3
+---@return NodeSpec
+function minetest.get_node(pos) end
+
 
 
 core = minetest

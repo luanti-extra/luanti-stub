@@ -11,12 +11,10 @@ Specific stub files for luan/minetest.
 
 ```json
 {
-    "diagnostics.globals": [
-        "nether",
-        "minetest"
-    ],
+    "diagnostics.globals": [],
     "workspace.library": ["../luanti-stub"]
 }
 ```
 
 The path `../luanti-stub` must be the correct path to where you have cloned this repository.
+The line `diagnostics.globals` is optional, but in case your mod is defining a global variable, it would be useful for the linter.
