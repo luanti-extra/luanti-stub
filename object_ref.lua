@@ -7,10 +7,14 @@
 ---@class ObjectRef
 local ObjectRef = {}
 
+---@class NameTagAttribute
+---@field text string The text written on the nametag (can be empty)
+---@field color? ColorSpec The color of the text (foreground)
+---@field bgcolor? ColorSpec|false 
 
 ---@class PlayerHPChangeReason
----@field type "set_hp"|"punch"|"fall"|"node_damage"|"drown"|"respawn"|nil
----@field from "mod"|"engine"|nil
+---@field type? "set_hp"|"punch"|"fall"|"node_damage"|"drown"|"respawn"
+---@field from? "mod"|"engine"
 ---@field object ObjectRef?
 ---@field node table?
 ---@field hunger number?
@@ -144,7 +148,7 @@ function ObjectRef:set_bone_position(bone, position, rotation) end
 function ObjectRef:get_bone_position(bone) end
 
 ---@param bone string
----@param override BoneOverride|nil
+---@param override? BoneOverride
 function ObjectRef:set_bone_override(bone, override) end
 
 ---@param bone string
@@ -173,10 +177,10 @@ function ObjectRef:get_effective_observers() end
 ---@return boolean
 function ObjectRef:is_player() end
 
----@return {text:string, color:ColorSpec, bgcolor:ColorSpec|false}|nil
+---@return NameTagAttribute? value the attributes of the nametag
 function ObjectRef:get_nametag_attributes() end
 
----@param attributes {text:string|nil, color:ColorSpec|nil, bgcolor:ColorSpec|false|nil}
+---@param attributes? NameTagAttribute The attribute of the nametag
 function ObjectRef:set_nametag_attributes(attributes) end
 
 ---@return string
@@ -204,13 +208,13 @@ function ObjectRef:get_rotation() end
 ---@param yaw number -- radians
 function ObjectRef:set_yaw(yaw) end
 
----@return number|nil -- radians
+---@return number? -- radians
 function ObjectRef:get_yaw() end
 
 ---@param mod string
 function ObjectRef:set_texture_mod(mod) end
 
----@return string|nil
+---@return string?
 function ObjectRef:get_texture_mod() end
 
 ---@param start_frame? {x:integer, y:integer}
@@ -239,10 +243,10 @@ function ObjectRef:add_player_velocity(vel) end -- Deprecated
 ---@return Vector3?
 function ObjectRef:get_look_dir() end
 
----@return number|nil
+---@return number?
 function ObjectRef:get_look_vertical() end
 
----@return number|nil
+---@return number?
 function ObjectRef:get_look_horizontal() end
 
 ---@param radians number
@@ -251,10 +255,10 @@ function ObjectRef:set_look_vertical(radians) end
 ---@param radians number
 function ObjectRef:set_look_horizontal(radians) end
 
----@return number|nil
+---@return number?
 function ObjectRef:get_look_pitch() end -- Deprecated
 
----@return number|nil
+---@return number?
 function ObjectRef:get_look_yaw() end -- Deprecated
 
 ---@param radians number
@@ -263,15 +267,15 @@ function ObjectRef:set_look_pitch(radians) end -- Deprecated
 ---@param radians number
 function ObjectRef:set_look_yaw(radians) end -- Deprecated
 
----@return integer|nil
+---@return integer?
 function ObjectRef:get_breath() end
 
 ---@param value integer
 function ObjectRef:set_breath(value) end
 
 ---@param fov number
----@param is_multiplier boolean|nil
----@param transition_time number|nil
+---@param is_multiplier? boolean
+---@param transition_time? number
 function ObjectRef:set_fov(fov, is_multiplier, transition_time) end
 
 ---@return number fov
@@ -280,11 +284,11 @@ function ObjectRef:set_fov(fov, is_multiplier, transition_time) end
 function ObjectRef:get_fov() end
 
 ---@param attribute string
----@param value string|number|nil
+---@param value? string|number
 function ObjectRef:set_attribute(attribute, value) end -- Deprecated
 
 ---@param attribute string
----@return string|nil
+---@return string?
 function ObjectRef:get_attribute(attribute) end -- Deprecated
 
 ---@return PlayerMetaRef
@@ -327,7 +331,7 @@ function ObjectRef:hud_remove(id) end
 function ObjectRef:hud_change(id, stat, value) end
 
 ---@param id integer
----@return HUDDefinition|nil
+---@return HUDDefinition? value the hud definition
 function ObjectRef:hud_get(id) end
 
 ---@return table<integer, HUDDefinition>
@@ -361,7 +365,7 @@ function ObjectRef:hud_get_hotbar_selected_image() end
 ---@param selected_mode integer
 function ObjectRef:set_minimap_modes(modes, selected_mode) end
 
----@param sky_parameters PlayerSkyParameters|nil
+---@param sky_parameters? PlayerSkyParameters
 function ObjectRef:set_sky(sky_parameters) end
 
 ---@param base_color ColorSpec
@@ -370,48 +374,48 @@ function ObjectRef:set_sky(sky_parameters) end
 ---@param clouds boolean
 function ObjectRef:set_sky(base_color, type, textures, clouds) end -- Deprecated overload
 
----@param as_table boolean|nil
+---@param as_table? boolean
 ---@return any
 function ObjectRef:get_sky(as_table) end
 
 ---@return any
 function ObjectRef:get_sky_color() end -- Deprecated
 
----@param sun_parameters PlayerSunParameters|nil
+---@param sun_parameters? PlayerSunParameters
 function ObjectRef:set_sun(sun_parameters) end
 
 ---@return PlayerSunParameters
 function ObjectRef:get_sun() end
 
----@param moon_parameters PlayerMoonParameters|nil
+---@param moon_parameters? PlayerMoonParameters
 function ObjectRef:set_moon(moon_parameters) end
 
 ---@return PlayerMoonParameters
 function ObjectRef:get_moon() end
 
----@param star_parameters PlayerStarParameters|nil
+---@param star_parameters? PlayerStarParameters
 function ObjectRef:set_stars(star_parameters) end
 
 ---@return PlayerStarParameters
 function ObjectRef:get_stars() end
 
----@param cloud_parameters PlayerCloudParameters|nil
+---@param cloud_parameters? PlayerCloudParameters
 function ObjectRef:set_clouds(cloud_parameters) end
 
 ---@return PlayerCloudParameters
 function ObjectRef:get_clouds() end
 
----@param ratio number|nil
+---@param ratio number?
 function ObjectRef:override_day_night_ratio(ratio) end
 
----@return number|nil
+---@return number?
 function ObjectRef:get_day_night_ratio() end
 
 ---@param idle {x:number, y:number}
 ---@param walk {x:number, y:number}
 ---@param dig {x:number, y:number}
 ---@param walk_while_dig {x:number, y:number}
----@param frame_speed number|nil
+---@param frame_speed? number
 function ObjectRef:set_local_animation(idle, walk, dig, walk_while_dig, frame_speed) end
 
 ---@return {x:number, y:number} idle
@@ -441,7 +445,7 @@ function ObjectRef:get_camera() end
 ---@return boolean
 function ObjectRef:send_mapblock(blockpos) end
 
----@param light_definition PlayerLightingDefinition|nil
+---@param light_definition? PlayerLightingDefinition
 function ObjectRef:set_lighting(light_definition) end
 
 ---@return PlayerLightingDefinition

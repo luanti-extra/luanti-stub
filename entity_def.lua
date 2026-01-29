@@ -99,6 +99,8 @@
 ---@field on_detach? fun(self: LuaEntity, parent: ObjectRef)
 ---@field get_staticdata? fun(self: LuaEntity): string
 ---@field velocity? number the entity's velocity
+---@field floats? boolean can the entity float
+---@field rotate? number the rotation amount of this entity
 ---@field [string] any  -- allow custom fields (convention: prefix with "_")
 
 

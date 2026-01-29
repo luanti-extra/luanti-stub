@@ -3,8 +3,6 @@
 -- Intended for LuaLS / EmmyLua-style annotations.
 
 
--- Basic “itemstring”/“nodename” aliases (Minetest usually uses plain strings for these).
----@alias ItemString string
 ---@alias EntityName string
 
 ---@alias MobType
@@ -83,6 +81,68 @@
 ---@field driver_attach_at Vector3
 ---@field driver_eye_offset Vector3
 ---@field driver_scale Vector3
+local MobEntity = {}
+
+---Sets the yaw on this mob entity.
+---@param yaw number The target yaw.
+---@param delay number The target delay.
+---@return number value the yaw that is set.
+function MobEntity:set_yaw(yaw, delay) end
+
+---Sets the animation of the current mob entity.
+---@param anim string Name of the animation to set on this mob entity.
+---@param force? boolean Should we force it?
+function MobEntity:set_animation(anim, force) end
+
+---Sets the line of sight to the specified positions.
+---@param pos1 Vector3 The first position.
+---@param pos2 Vector3 The second position.
+function MobEntity:line_of_sight(pos1, pos2) end
+
+
+---Attempts to find somewhere to move to (hence the correction)
+---@param override boolean whether we should override the current object
+---@return boolean value true on success
+function MobEntity:attempt_flight_correction(override) end
+
+
+---Are we flying in what we are supposed to?
+---@return boolean value true if yes.
+function MobEntity:flight_check() end
+
+
+---Converts yaw to position.
+---@param target Vector3 The target vector.
+---@param rot number The target rotation I guess (or delay?)
+---@return number value The yaw that is set.
+function MobEntity:yaw_to_pos(target, rot) end
+
+---Returns the current velocity of this mob entity.
+---@return number value the velocity.
+function MobEntity:get_velocity() end
+
+
+---Sets the current velocity of this mob entity.
+---@param v number the new target velocity.
+function MobEntity:set_velocity(v) end
+
+
+---look for stay_near nodes and move towards them
+---@return boolean value true if we tried to move towards a node.
+function MobEntity:do_stay_near() end
+
+---Updates the tag of this mob entity.
+---@param new_name string The new name of the mob entity.
+function MobEntity:update_tag(new_name) end
+
+---Drop the items for this mob entity after its death.
+function MobEntity:item_drop() end
+
+---Plays the sound for the current mob entity object.
+---@param sound SoundSpec The sound spec to play.
+function MobEntity:mob_sound(sound) end
+
+
 
 ---@alias OnDie fun(self:MobEntity, pos:Vector3):nil
 ---@alias CustomAttack fun(self:MobEntity, to_attack:ObjectRef):nil
@@ -219,7 +279,7 @@ MobsRedo = {}
 ---@param name EntityName
 ---@param def MobDef
 ---@return nil
-function MobsRedo:register_mob(name, def) end
+function MobsRedo.register_mob(name, def) end
 
 -- Register a “classic” spawn (wrapper around spawn_specific in docs).
 ---@param name EntityName
@@ -231,7 +291,7 @@ function MobsRedo:register_mob(name, def) end
 ---@param max_height integer
 ---@param day_toggle boolean|nil
 ---@return nil
-function MobsRedo:register_spawn(name, nodes, max_light, min_light, chance, active_object_count, max_height, day_toggle) end
+function MobsRedo.register_spawn(name, nodes, max_light, min_light, chance, active_object_count, max_height, day_toggle) end
 
 -- Register a detailed spawn definition (ABM-style).
 ---@param name EntityName
@@ -247,18 +307,18 @@ function MobsRedo:register_spawn(name, nodes, max_light, min_light, chance, acti
 ---@param day_toggle boolean|nil
 ---@param on_spawn fun(self:MobEntity, pos:Vector3):nil
 ---@return nil
-function MobsRedo:spawn_specific(name, nodes, neighbors, min_light, max_light, interval, chance, active_object_count, min_height, max_height, day_toggle, on_spawn) end
+function MobsRedo.spawn_specific(name, nodes, neighbors, min_light, max_light, interval, chance, active_object_count, min_height, max_height, day_toggle, on_spawn) end
 
 -- Table-form spawner registration (fields map to spawn_specific params).
 ---@param def SpawnDef
 ---@return nil
-function MobsRedo:spawn(def) end
+function MobsRedo.spawn(def) end
 
 -- Register an arrow entity used by ranged mobs.
 ---@param name EntityName
 ---@param def ArrowDef
 ---@return nil
-function MobsRedo:register_arrow(name, def) end
+function MobsRedo.register_arrow(name, def) end
 
 -- Register a spawn egg item for a mob.
 ---@param name EntityName
@@ -267,23 +327,23 @@ function MobsRedo:register_arrow(name, def) end
 ---@param addegg integer
 ---@param no_creative boolean|nil
 ---@return nil
-function MobsRedo:register_egg(name, description, background, addegg, no_creative) end
+function MobsRedo.register_egg(name, description, background, addegg, no_creative) end
 
 -- Explosion helpers.
----@param self MobEntity
+---@param entity MobEntity
 ---@param pos Vector3
 ---@param radius integer
 ---@return nil
-function MobsRedo:boom(self, pos, radius) end
+function MobsRedo.boom(entity, pos, radius) end
 
 ---@deprecated Use MobsRedo:boom
 ---@param pos Vector3
 ---@param radius integer
 ---@return nil
-function MobsRedo:explosion(pos, radius) end
+function MobsRedo.explosion(pos, radius) end
 
 -- Capture / tame helpers (typically called inside on_rightclick).
----@param self MobEntity
+---@param entity MobEntity
 ---@param clicker ObjectRef
 ---@param chance_hand integer
 ---@param chance_net integer
@@ -291,15 +351,15 @@ function MobsRedo:explosion(pos, radius) end
 ---@param force_take boolean|nil
 ---@param replacewith ItemString|nil
 ---@return nil
-function MobsRedo:capture_mob(self, clicker, chance_hand, chance_net, chance_lasso, force_take, replacewith) end
+function MobsRedo.capture_mob(entity, clicker, chance_hand, chance_net, chance_lasso, force_take, replacewith) end
 
----@param self MobEntity
+---@param entity MobEntity
 ---@param clicker ObjectRef
 ---@param feed_count integer
 ---@param breed boolean
 ---@param tame boolean
 ---@return boolean accepted
-function MobsRedo:feed_tame(self, clicker, feed_count, breed, tame) end
+function MobsRedo.feed_tame(entity, clicker, feed_count, breed, tame) end
 
 ---@param self MobEntity
 ---@param clicker ObjectRef
@@ -334,30 +394,52 @@ function MobsRedo.drive(entity, moving_anim, stand_anim, can_fly, dtime) end
 ---@return nil
 function MobsRedo:fly(self, dtime, speed, can_shoot, arrow_entity, move_animation, stand_animation) end
 
----@param self MobEntity
----@param name string
+
+---@param yaw number the targt yaw to set
+---@param delay number the target delay
+function MobsRedo:set_yaw(yaw, delay) end
+
+---@param entity MobEntity
+---@param anim string the name of the animation
+---@param force? boolean should the animation be forced?
 ---@return nil
-function MobsRedo:set_animation(self, name) end
+function MobsRedo.set_animation(entity, anim, force) end
 
 -- Extra API functions mentioned in some changelogs/mirrors (signatures not fully specified in the 2017 HTML docs):
 ---@param self MobEntity
----@param player ObjectRef
+---@param clicker ObjectRef
 ---@return nil
-function MobsRedo:force_capture(self, player) end -- ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
+function MobsRedo:force_capture(clicker) end
 
----@param self MobEntity
----@param velocity number|Vector3
+---@param velocity number|Vector3 The target velocity to set
 ---@return nil
-function MobsRedo:set_velocity(self, velocity) end -- ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
+function MobsRedo:set_velocity(velocity) end
 
+---@return Vector3? value returns the velocity of this mob; or nil if not available
+function MobsRedo:get_velocity() end
+
+--- Sets the line of sight for the specified mob entity.
+---@param entity MobEntity
 ---@param pos1 Vector3
 ---@param pos2 Vector3
 ---@return boolean
-function MobsRedo:line_of_sight(pos1, pos2) end -- ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
+function MobsRedo.line_of_sight(entity, pos1, pos2) end
 
--- ContentDB release notes mention a new MobsRedo:scale_mob() exists (params not documented there).
+---@param target_entity EntityDefinition The target entity definition
+function MobsRedo.compatibility_check(target_entity) end
+
+---Sets the yaw of the target entity
+---@param entity MobEntity The target mob entity to set the yaw on
+---@param yaw number The target yaw
+---@param delay number The delay to set the yaw parameter
+function MobsRedo.yaw(entity, yaw, delay) end
+
+
+---@param w? number the width scale
+---@param h? number the height scale
+---@param perma? boolean should the changes be permanent?
 ---@return nil
-function MobsRedo:scale_mob(...) end -- ([content.luanti.org](https://content.luanti.org/packages/TenPlus1/mobs/))
+function MobsRedo:scale_mob(w, h, perma) end
 
 
 ---Particle helper used by many mobs_redo-based MobsRedo.
@@ -369,7 +451,16 @@ function MobsRedo:scale_mob(...) end -- ([content.luanti.org](https://content.lu
 ---@param max_size? number The maximum size for the effect
 ---@param radius? number The radius of the effect
 ---@param gravity? number The gravity applied to it
-function MobsRedo:effect(pos, amount, texture, min_size, max_size, radius, gravity) end
+---@param glow? number The glow for the effect
+---@param fall? boolean Should the effect be falling or not
+function MobsRedo.effect(pos, amount, texture, min_size, max_size, radius, gravity, glow, fall) end
+
+
+---Removes the mob and decreases the counter
+---@param target_entity MobEntity The target mob entity.
+---@param decrease? boolean Whether we should decrease the counter or not.
+function MobsRedo.remove(target_entity, decrease) end
+
 
 
 mobs = MobsRedo

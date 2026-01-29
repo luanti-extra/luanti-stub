@@ -65,6 +65,9 @@ minetest = {
     ---@type table<string, EntityDefinition>
     registered_entities = {},
 
+    ---@type table<string, NodeDefinition>
+    registered_nodes = {},
+
     ---@return string modname The currently loading mod's name.
     ---returns the currently loading mod's name, when loading a mod.
     get_current_modname = function() end,
@@ -253,10 +256,6 @@ minetest = {
     -- Registration functions --
     ----------------------------
 
-    ---@param name string in the format `namespace:name`, i.e. `default:dirt`
-    ---@param definition NodeDefinition
-    register_node = function(name, definition) end,
-
     ---@param name string in the format `namespace:name`, i.e. `default:stick`
     ---@param definition ItemDefinition
     register_craftitem = function(name, definition) end,
@@ -283,10 +282,6 @@ minetest = {
     --- `name` from `minetest.registered_items` and from the associated item table
     --- according to its nature: `minetest.registered_nodes`, etc.
     unregister_item = function(name) end,
-
-    ---@param name string in the format `namespace:name`, i.e. `zr_stone:pick`
-    ---@param definition unknown
-    register_entity = function(name, definition) end,
 
     ---@param definition unknown
     register_abm = function(definition) end,
@@ -1311,6 +1306,12 @@ function minetest.get_node(pos) end
 ---@param entitydef EntityDefinition
 ---@return nil
 function minetest.register_entity(name, entitydef) end
+
+
+---@param name string in the format `namespace:name`, i.e. `default:dirt`
+---@param definition NodeDefinition The node definition
+---@return nil
+function minetest.register_node(name, definition) end
 
 
 core = minetest
