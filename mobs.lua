@@ -97,11 +97,12 @@ function MobEntity:set_animation(anim, force) end
 ---Sets the line of sight to the specified positions.
 ---@param pos1 Vector3 The first position.
 ---@param pos2 Vector3 The second position.
+---@return boolean
 function MobEntity:line_of_sight(pos1, pos2) end
 
 
 ---Attempts to find somewhere to move to (hence the correction)
----@param override boolean whether we should override the current object
+---@param override? boolean whether we should override the current object
 ---@return boolean value true on success
 function MobEntity:attempt_flight_correction(override) end
 
@@ -113,12 +114,12 @@ function MobEntity:flight_check() end
 
 ---Converts yaw to position.
 ---@param target Vector3 The target vector.
----@param rot number The target rotation I guess (or delay?)
+---@param rot? number The target rotation I guess (or delay?)
 ---@return number value The yaw that is set.
 function MobEntity:yaw_to_pos(target, rot) end
 
 ---Returns the current velocity of this mob entity.
----@return number value the velocity.
+---@return number? value the velocity.
 function MobEntity:get_velocity() end
 
 
@@ -132,23 +133,29 @@ function MobEntity:set_velocity(v) end
 function MobEntity:do_stay_near() end
 
 ---Updates the tag of this mob entity.
----@param new_name string The new name of the mob entity.
+---@param new_name? string The new name of the mob entity.
 function MobEntity:update_tag(new_name) end
 
 ---Drop the items for this mob entity after its death.
 function MobEntity:item_drop() end
 
 ---Plays the sound for the current mob entity object.
----@param sound SoundSpec The sound spec to play.
+---@param sound SoundSpec|string|nil The sound spec to play.
 function MobEntity:mob_sound(sound) end
 
 
 
 ---@alias OnDie fun(self:MobEntity, pos:Vector3):nil
----@alias CustomAttack fun(self:MobEntity, to_attack:ObjectRef):nil
+---@alias CustomAttack fun(self:MobEntity, to_attack:ObjectRef):boolean|nil
 ---@alias OnReplace fun(self:MobEntity, pos:Vector3, oldnode:table, newnode:table):boolean|nil
----@alias OnBlast fun(object:ObjectRef, damage:number):(boolean, boolean, any)
----@alias OnSpawn fun(self:MobEntity, pos:Vector3):nil
+---@alias OnBlast fun(self:MobEntity, damage:number):(boolean, boolean, any)
+---@alias OnSpawn fun(self:MobEntity, pos:Vector3):boolean|nil
+---@alias OnBreed fun(self:MobEntity, mate:MobEntity):boolean|nil
+---@alias OnFlop fun(self:MobEntity):boolean|nil
+---@alias DoPunch fun(self:MobEntity, hitter:ObjectRef, time_from_last_punch:number, tool_capabilities:table, dir:Vector3, damage:number):boolean|nil
+---@alias DoCustom fun(self:MobEntity, dtime:number, moveresult:Moveresult):boolean|nil
+---@alias OnDeath fun(self:MobEntity, killer:ObjectRef|nil):nil
+---@alias OnSound fun(self:MobEntity, sound:table):nil
 
 ---@class MobDef
 -- “Definition table” for MobsRedo:register_mob(name, def). ([antummt.github.io](https://antummt.github.io/mod-mobs_redo/api.html))
@@ -239,11 +246,14 @@ function MobEntity:mob_sound(sound) end
 -- Extra callbacks/fields that are commonly referenced in mobs_redo changelogs / ecosystem,
 -- but not fully specified in the 2017 API HTML page:
 ---@field on_spawn? OnSpawn -- mentioned in changelog in some mirrors. ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
----@field on_breed? fun(self:MobEntity, parent1:MobEntity, parent2:MobEntity):nil -- mentioned in changelog. ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
+---@field on_breed? OnBreed -- mentioned in changelog. ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
 ---@field on_grown? fun(self:MobEntity):nil -- mentioned in changelog. ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
----@field do_punch? fun(self:MobEntity, hitter:ObjectRef, time_from_last_punch:number, tool_capabilities:table, dir:Vector3, damage:number):nil -- mentioned in changelog. ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
----@field on_flop? fun(self:MobEntity):nil -- mentioned in changelog (swimming support). ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
+---@field do_punch? DoPunch -- mentioned in changelog. ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
+---@field on_flop? OnFlop -- mentioned in changelog (swimming support). ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
 ---@field air_damage? number -- mentioned in changelog (swimming support). ([notabug.org](https://notabug.org/OgelGames/mobs_redo))
+---@field on_death? OnDeath
+---@field do_custom? DoCustom
+---@field on_sound? OnSound
 ---@class SpawnDef
 ---@field name EntityName
 ---@field nodes NodeName[]
@@ -256,7 +266,7 @@ function MobEntity:mob_sound(sound) end
 ---@field min_height? integer
 ---@field max_height? integer
 ---@field day_toggle? boolean|nil     -- true=day, false=night, nil=any. ([antummt.github.io](https://antummt.github.io/mod-mobs_redo/api.html))
----@field on_spawn? fun(self:MobEntity, pos:Vector3):nil
+---@field on_spawn? OnSpawn
 
 ---@class ArrowDef
 -- Definition table for MobsRedo:register_arrow(name, def). ([antummt.github.io](https://antummt.github.io/mod-mobs_redo/api.html))
@@ -270,18 +280,23 @@ function MobEntity:mob_sound(sound) end
 ---@field hit_mob? fun(self:table, player:ObjectRef):nil
 ---@field hit_node? fun(self:table, pos:Vector3, node:table):nil
 
----@class MobsRedoAPI
+---@class MobsRedo
 -- Global `mobs` table (injected by the mobs_redo mod).
----@field mod? string -- Many mods check `MobsRedo.mod == "redo"` when multiple mob APIs exist.
+---@field mod string
+---@field version string
+---@field spawning_mobs table<EntityName, table>
+---@field translate fun(msgid:string, ...):string
+---@field node_snow NodeName
+---@field node_dirt NodeName
+---@field fallback_node NodeName
+---@field mob_class MobEntity
 MobsRedo = {}
 
--- Register a mob entity.
+-- Registration.
 ---@param name EntityName
 ---@param def MobDef
----@return nil
 function MobsRedo.register_mob(name, def) end
 
--- Register a “classic” spawn (wrapper around spawn_specific in docs).
 ---@param name EntityName
 ---@param nodes NodeName[]
 ---@param max_light integer
@@ -290,10 +305,8 @@ function MobsRedo.register_mob(name, def) end
 ---@param active_object_count integer
 ---@param max_height integer
 ---@param day_toggle boolean|nil
----@return nil
 function MobsRedo.register_spawn(name, nodes, max_light, min_light, chance, active_object_count, max_height, day_toggle) end
 
--- Register a detailed spawn definition (ABM-style).
 ---@param name EntityName
 ---@param nodes NodeName[]
 ---@param neighbors NodeName[]|nil
@@ -305,44 +318,79 @@ function MobsRedo.register_spawn(name, nodes, max_light, min_light, chance, acti
 ---@param min_height integer
 ---@param max_height integer
 ---@param day_toggle boolean|nil
----@param on_spawn fun(self:MobEntity, pos:Vector3):nil
----@return nil
+---@param on_spawn OnSpawn|nil
 function MobsRedo.spawn_specific(name, nodes, neighbors, min_light, max_light, interval, chance, active_object_count, min_height, max_height, day_toggle, on_spawn) end
 
--- Table-form spawner registration (fields map to spawn_specific params).
 ---@param def SpawnDef
----@return nil
 function MobsRedo.spawn(def) end
 
--- Register an arrow entity used by ranged mobs.
 ---@param name EntityName
 ---@param def ArrowDef
----@return nil
 function MobsRedo.register_arrow(name, def) end
 
--- Register a spawn egg item for a mob.
 ---@param name EntityName
 ---@param description string
 ---@param background string
 ---@param addegg integer
 ---@param no_creative boolean|nil
----@return nil
-function MobsRedo.register_egg(name, description, background, addegg, no_creative) end
+---@param can_spawn_protect boolean|nil
+function MobsRedo.register_egg(name, description, background, addegg, no_creative, can_spawn_protect) end
 
--- Explosion helpers.
+-- Spawn / visibility helpers.
+---@param pos Vector3
+---@param fallback? NodeName
+---@return table
+function MobsRedo.node_ok(pos, fallback) end
+
+---@param entity MobEntity
+---@param nodename NodeName
+---@return boolean
+function MobsRedo.is_node_dangerous(entity, nodename) end
+
+---@param entity MobEntity
+---@param player_name string
+---@return boolean
+function MobsRedo.is_invisible(entity, player_name) end
+
+---@param pos Vector3
+---@param name EntityName
+---@return Vector3|nil
+function MobsRedo.can_spawn(pos, name) end
+
+---@param pos Vector3
+---@param def {name:EntityName, texture?:string|string[], child?:boolean, owner?:string, nametag?:string, ignore_count?:boolean}
+---@return MobEntity|false|nil
+function MobsRedo.add_mob(pos, def) end
+
+---@param pos Vector3
+---@param node table
+---@param name EntityName
+---@return boolean|nil
+function MobsRedo.spawn_abm_check(pos, node, name) end
+
+-- Combat / interaction helpers.
 ---@param entity MobEntity
 ---@param pos Vector3
----@param radius integer
----@return nil
-function MobsRedo.boom(entity, pos, radius) end
+---@param node_damage_radius integer
+---@param entity_radius? integer
+---@param texture? string
+function MobsRedo.boom(entity, pos, node_damage_radius, entity_radius, texture) end
 
----@deprecated Use MobsRedo:boom
+---@param entity MobEntity|nil
 ---@param pos Vector3
 ---@param radius integer
----@return nil
+---@param texture? string
+function MobsRedo.safe_boom(entity, pos, radius, texture) end
+
+---@deprecated Use MobsRedo.boom
+---@param pos Vector3
+---@param radius integer
 function MobsRedo.explosion(pos, radius) end
 
--- Capture / tame helpers (typically called inside on_rightclick).
+---@param entity MobEntity
+---@param clicker ObjectRef
+function MobsRedo.force_capture(entity, clicker) end
+
 ---@param entity MobEntity
 ---@param clicker ObjectRef
 ---@param chance_hand integer
@@ -350,7 +398,7 @@ function MobsRedo.explosion(pos, radius) end
 ---@param chance_lasso integer
 ---@param force_take boolean|nil
 ---@param replacewith ItemString|nil
----@return nil
+---@return boolean|ItemStack
 function MobsRedo.capture_mob(entity, clicker, chance_hand, chance_net, chance_lasso, force_take, replacewith) end
 
 ---@param entity MobEntity
@@ -361,105 +409,90 @@ function MobsRedo.capture_mob(entity, clicker, chance_hand, chance_net, chance_l
 ---@return boolean accepted
 function MobsRedo.feed_tame(entity, clicker, feed_count, breed, tame) end
 
----@param self MobEntity
+---@param entity MobEntity
 ---@param clicker ObjectRef
 ---@return boolean protected
-function MobsRedo:protect(self, clicker) end
+function MobsRedo.protect(entity, clicker) end
+
+---@param target_entity MobEntity
+---@param decrease? boolean
+function MobsRedo.remove(target_entity, decrease) end
+
+---@param old_name EntityName
+---@param new_name EntityName
+function MobsRedo.alias_mob(old_name, new_name) end
 
 -- Riding helpers.
 ---@param entity MobEntity
 ---@param player ObjectRef
----@return nil
 function MobsRedo.attach(entity, player) end
 
----@param player ObjectRef The player to detach from the mob
----@return nil
+---@param player ObjectRef
 function MobsRedo.detach(player) end
 
----@param entity MobEntity The mob entity to fly
----@param moving_anim string The moving animation
----@param stand_anim string The standing animation
----@param can_fly boolean Can it fly
----@param dtime number The time
----@return nil
+---@param entity MobEntity
+---@param moving_anim string
+---@param stand_anim string
+---@param can_fly boolean
+---@param dtime number
 function MobsRedo.drive(entity, moving_anim, stand_anim, can_fly, dtime) end
 
----@param self MobEntity
----@param dtime number
+---@param entity MobEntity
+---@param driver ObjectRef|nil
 ---@param speed number
 ---@param can_shoot boolean
 ---@param arrow_entity EntityName
 ---@param move_animation string
 ---@param stand_animation string
----@return nil
-function MobsRedo:fly(self, dtime, speed, can_shoot, arrow_entity, move_animation, stand_animation) end
+function MobsRedo.fly(entity, driver, speed, can_shoot, arrow_entity, move_animation, stand_animation) end
 
-
----@param yaw number the targt yaw to set
----@param delay number the target delay
-function MobsRedo:set_yaw(yaw, delay) end
-
----@param entity MobEntity
----@param anim string the name of the animation
----@param force? boolean should the animation be forced?
----@return nil
-function MobsRedo.set_animation(entity, anim, force) end
-
--- Extra API functions mentioned in some changelogs/mirrors (signatures not fully specified in the 2017 HTML docs):
----@param self MobEntity
----@param clicker ObjectRef
----@return nil
-function MobsRedo:force_capture(clicker) end
-
----@param velocity number|Vector3 The target velocity to set
----@return nil
-function MobsRedo:set_velocity(velocity) end
-
----@return Vector3? value returns the velocity of this mob; or nil if not available
-function MobsRedo:get_velocity() end
-
---- Sets the line of sight for the specified mob entity.
+-- Compatibility wrappers around real `MobEntity` methods.
 ---@param entity MobEntity
 ---@param pos1 Vector3
 ---@param pos2 Vector3
 ---@return boolean
 function MobsRedo.line_of_sight(entity, pos1, pos2) end
 
----@param target_entity EntityDefinition The target entity definition
-function MobsRedo.compatibility_check(target_entity) end
+---@param entity MobEntity
+---@param anim string
+---@param force? boolean
+function MobsRedo.set_animation(entity, anim, force) end
 
----Sets the yaw of the target entity
----@param entity MobEntity The target mob entity to set the yaw on
----@param yaw number The target yaw
----@param delay number The delay to set the yaw parameter
+---@param entity MobEntity
+---@param yaw number
+---@param delay number
 function MobsRedo.yaw(entity, yaw, delay) end
 
+---@param entity MobEntity
+---@param target Vector3
+---@param rot? number
+---@return number
+function MobsRedo.yaw_to_pos(entity, target, rot) end
 
----@param w? number the width scale
----@param h? number the height scale
----@param perma? boolean should the changes be permanent?
----@return nil
-function MobsRedo:scale_mob(w, h, perma) end
+---@param entity MobEntity
+---@param w? number
+---@param h? number
+---@param perma? boolean
+function MobsRedo.scale_mob(entity, w, h, perma) end
 
+-- Misc helpers.
+---@param name string
+---@return boolean
+function MobsRedo.is_creative(name) end
 
----Particle helper used by many mobs_redo-based MobsRedo.
----Matches calls like: MobsRedo:effect(pos, 30, "nether_particle.png", 0.1, 2, 3, 5)
----@param pos Vector3 The position of the effect
----@param amount integer The amount of the effect
----@param texture string The texture used for the effect
----@param min_size? number The minimum size for the effect
----@param max_size? number The maximum size for the effect
----@param radius? number The radius of the effect
----@param gravity? number The gravity applied to it
----@param glow? number The glow for the effect
----@param fall? boolean Should the effect be falling or not
+---@param target_entity EntityDefinition
+function MobsRedo.compatibility_check(target_entity) end
+
+---@param pos Vector3
+---@param amount integer
+---@param texture string
+---@param min_size? number
+---@param max_size? number
+---@param radius? number
+---@param gravity? number
+---@param glow? number
+---@param fall? boolean
 function MobsRedo.effect(pos, amount, texture, min_size, max_size, radius, gravity, glow, fall) end
-
-
----Removes the mob and decreases the counter
----@param target_entity MobEntity The target mob entity.
----@param decrease? boolean Whether we should decrease the counter or not.
-function MobsRedo.remove(target_entity, decrease) end
 
 
 
